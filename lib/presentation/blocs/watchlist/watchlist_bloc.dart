@@ -32,10 +32,28 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
 
   Future<void> _onLoadWatchlist(LoadWatchlist event, Emitter<WatchlistState> emit) async {
     final symbols = _watchlistRepository.getSymbols();
+    emit(state.copyWith(symbols: symbols));
+
     for (final s in symbols) {
       _marketRepository.subscribe(s.symbol);
+      
+      // Seed with last known price from API
+      try {
+        final data = await _marketRepository.fetchRealtimeCurrent(s.symbol);
+        if (data.isNotEmpty) {
+          final last = data.last;
+          final tick = Tick(
+            symbol: s.symbol,
+            ltp: last.close,
+            change: last.close - last.open, // Approximation for initial view
+            changePct: last.open > 0 ? ((last.close - last.open) / last.open) * 100 : 0.0,
+            vwap: last.close, // Fallback
+            timestamp: last.timestamp,
+          );
+          add(TickReceived(tick));
+        }
+      } catch (_) {}
     }
-    emit(state.copyWith(symbols: symbols));
   }
 
   Future<void> _onAddSymbol(AddSymbolToWatchlist event, Emitter<WatchlistState> emit) async {

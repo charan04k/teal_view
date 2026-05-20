@@ -50,18 +50,18 @@ class MarketRepository {
         final tick = Tick.fromJson(data);
         _tickController.add(tick);
       } catch (e) {
-        print('Error parsing tick: \$e, data: \$data');
+        // print('Error parsing tick: $e, data: $data');
       }
     });
 
     _socket?.connect();
 
-    // Mock data generator fallback to guarantee live UI updates
+    // Mock data generator fallback to guarantee live UI updates when market is closed or server is slow
     _mockTickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       for (final symbol in _subscribedSymbols) {
         // Generate random mock ticks
         final random = DateTime.now().millisecondsSinceEpoch % 100;
-        final basePrice = symbol == 'RELIANCE' ? 2400.0 : 1500.0;
+        final basePrice = symbol == 'III' ? 2400.0 : 1500.0;
         final mockLtp = basePrice + (random - 50) / 10;
         final change = mockLtp - basePrice;
         

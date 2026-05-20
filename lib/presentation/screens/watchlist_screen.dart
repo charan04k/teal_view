@@ -42,35 +42,52 @@ class WatchlistScreen extends StatelessWidget {
               final isPositive = change >= 0;
               final color = isPositive ? Colors.greenAccent : Colors.redAccent;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: ListTile(
-                  title: Text(symbol.symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(symbol.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  trailing: tick == null
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              ltp.toStringAsFixed(2),
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
-                            ),
-                            Text(
-                              '${isPositive ? '+' : ''}${change.toStringAsFixed(2)} (${changePct.toStringAsFixed(2)}%)',
-                              style: TextStyle(color: color, fontSize: 12),
-                            ),
-                          ],
+              return Dismissible(
+                key: Key(symbol.symbol),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  color: Colors.redAccent,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (_) {
+                  context.read<WatchlistBloc>().add(RemoveSymbolFromWatchlist(symbol));
+                },
+                child: Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: ListTile(
+                    title: Text(symbol.symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(symbol.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    trailing: tick == null
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                ltp.toStringAsFixed(2),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
+                              ),
+                              Text(
+                                '${isPositive ? '+' : ''}${change.toStringAsFixed(2)} (${changePct.toStringAsFixed(2)}%)',
+                                style: TextStyle(color: color, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChartDetailScreen(symbol: symbol.symbol),
                         ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChartDetailScreen(symbol: symbol.symbol),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               );
             },

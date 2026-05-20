@@ -33,7 +33,7 @@ class AboutScreen extends StatelessWidget {
                 border: Border.all(color: const Color(0xFF38BDF8), width: 1),
               ),
               child: const Text(
-                'Build Tag: TV-WL-2026-Q3',
+                'Build Tag: TV-WL2026-Q3',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

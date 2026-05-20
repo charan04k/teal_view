@@ -59,8 +59,6 @@ class _ChartDetailScreenState extends State<ChartDetailScreen> {
             final minY = state.data.map((e) => e.low).reduce((a, b) => a < b ? a : b) - 5;
             final maxY = state.data.map((e) => e.high).reduce((a, b) => a > b ? a : b) + 5;
 
-            print("object $minX $minY");
-
             final spots = state.data.map((e) {
               return FlSpot(e.timestamp.toDouble(), e.close);
             }).toList();
@@ -73,43 +71,42 @@ class _ChartDetailScreenState extends State<ChartDetailScreen> {
                   maxX: maxX,
                   minY: minY,
                   maxY: maxY,
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final date = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt(), isUtc: true)
+                              .add(const Duration(hours: 5, minutes: 30));
+                          return LineTooltipItem(
+                            '₹${spot.y.toStringAsFixed(2)}\n${DateFormat('HH:mm').format(date)}',
+                            const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                          if (value == meta.min || value == meta.max) return const SizedBox.shrink();
+                          
+                          final dateUtc = DateTime.fromMillisecondsSinceEpoch(value.toInt(), isUtc: true);
+                          final dateIst = dateUtc.add(const Duration(hours: 5, minutes: 30));
 
-                          if (state.range == '1D') {
-                            // Parse as UTC first, then adjust by 5:30 to match IST
-                            final dateUtc = DateTime.fromMillisecondsSinceEpoch(value.toInt(), isUtc: true);
-                            final dateIst = dateUtc.add(const Duration(hours: 5, minutes: 30));
+                          String formatStr = 'HH:mm';
+                          if (state.range == '1W') formatStr = 'EEE';
+                          if (state.range == '1M') formatStr = 'dd MMM';
 
-                            if (value == meta.max || value == meta.min) return const SizedBox.shrink();
-
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                '${DateFormat('HH:mm').format(dateIst)} IST',
-                                style: const TextStyle(color: Colors.grey, fontSize: 10),
-                              ),
-                            );
-                          } else {
-                            String formatStr = 'HH:mm';
-                            if (state.range == '1W') formatStr = 'EEE';
-                            if (state.range == '1M') formatStr = 'dd MMM';
-
-                            if (value == meta.max || value == meta.min) return const SizedBox.shrink();
-
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                DateFormat(formatStr).format(date),
-                                style: const TextStyle(color: Colors.grey, fontSize: 10),
-                              ),
-                            );
-                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              DateFormat(formatStr).format(dateIst),
+                              style: const TextStyle(color: Colors.grey, fontSize: 10),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -157,7 +154,23 @@ class _ChartDetailScreenState extends State<ChartDetailScreen> {
 
         if (isLandscape) {
           return Scaffold(
-            body: SafeArea(child: chartWidget),
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  chartWidget,
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.fullscreen_exit, color: Colors.white70),
+                      onPressed: () {
+                        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         }
 

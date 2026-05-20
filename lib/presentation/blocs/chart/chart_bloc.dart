@@ -32,14 +32,13 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
       // Use POST /realtime-current for intraday (09:15 to now)
       data = await _marketRepository.fetchRealtimeCurrent(event.symbol);
     } else {
-      // API strictly limits historical data to 2026-05-04 → 2026-05-18
-      // Cap the end_date to the max valid date and compute start_date from there.
-      const apiMaxDate = '2026-05-18';
+      // API strictly limits historical data to 2026-05-04 → 2026-05-07
+      const apiMaxDate = '2026-05-07';
       const apiMinDate = '2026-05-04';
 
       String startDate;
       if (event.range == '1W') {
-        startDate = '2026-05-12'; // 7 days back from max
+        startDate = '2026-05-04'; // Spans all available days
       } else {
         startDate = apiMinDate; // full range for 1M
       }
@@ -89,33 +88,22 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
     if (state.range != '1D') return; // Historical views stay static
 
     final updatedData = List<HistoricalData>.from(state.data);
-    final lastData = updatedData.last;
+    final lastTs = updatedData.last.timestamp;
     final tickTs = event.tick.timestamp;
     final ltp = event.tick.ltp;
 
-    // Skip ticks older than or equal to current last candle (handles burst deduplication)
-    if (tickTs <= lastData.timestamp) return;
+    // Skip ticks older than or equal to current last point (handles burst deduplication)
+    if (tickTs <= lastTs) return;
 
-    // Simulator advances 30s every 1.5s real-world. Group ticks within 60s real-time window.
-    if (tickTs - lastData.timestamp < 60000) {
-      updatedData[updatedData.length - 1] = HistoricalData(
-        timestamp: lastData.timestamp,
-        open: lastData.open,
-        high: ltp > lastData.high ? ltp : lastData.high,
-        low: ltp < lastData.low ? ltp : lastData.low,
-        close: ltp,
-        volume: lastData.volume,
-      );
-    } else {
-      updatedData.add(HistoricalData(
+    // Add each new tick as a new point to the line chart for smooth updates
+    updatedData.add(HistoricalData(
         timestamp: tickTs,
-        open: lastData.close,
-        high: ltp > lastData.close ? ltp : lastData.close,
-        low: ltp < lastData.close ? ltp : lastData.close,
+        open: ltp,
+        high: ltp,
+        low: ltp,
         close: ltp,
         volume: 0,
-      ));
-    }
+    ));
 
     emit(state.copyWith(data: updatedData));
   }
