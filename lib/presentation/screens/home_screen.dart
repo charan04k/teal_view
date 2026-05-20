@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:teal_view/presentation/view/portfolio_screen.dart';
-import 'package:teal_view/presentation/view/watchlist_screen.dart';
-
-import 'about_screen.dart';
 import 'dashboard_screen.dart';
+import 'watchlist_screen.dart';
+import 'portfolio_screen.dart';
+import 'about_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const WatchListScreen(),
+    const WatchlistScreen(),
     const PortfolioScreen(),
     const AboutScreen(),
   ];
