@@ -46,8 +46,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider.value(value: marketRepository),
+        RepositoryProvider.value(value: portfolioRepository),
+        RepositoryProvider.value(value: watchlistRepository),
+      ],
+      child: MultiBlocProvider(
+        providers: [
         BlocProvider<WatchlistBloc>(
           create: (context) => WatchlistBloc(
             marketRepository: marketRepository,
@@ -73,6 +79,7 @@ class MyApp extends StatelessWidget {
         home: const HomeScreen(),
         debugShowCheckedModeBanner: false,
       ),
+    ),
     );
   }
 }
