@@ -123,15 +123,14 @@ class _ChartDetailScreenState
             final maxX =
             state.data.last.timestamp.toDouble();
 
-            final minY = state.data
-                .map((e) => e.low)
-                .reduce((a, b) => a < b ? a : b) -
-                5;
+            final prices = state.data.map((e) => e.close).toList();
+            final minPrice = prices.reduce((a, b) => a < b ? a : b);
+            final maxPrice = prices.reduce((a, b) => a > b ? a : b);
+            final diff = maxPrice - minPrice;
+            final padding = diff > 0 ? diff * 0.1 : 5.0;
 
-            final maxY = state.data
-                .map((e) => e.high)
-                .reduce((a, b) => a > b ? a : b) +
-                5;
+            final minY = minPrice - padding;
+            final maxY = maxPrice + padding;
 
             final spots = state.data.map((e) {
               return FlSpot(
@@ -216,6 +215,12 @@ class _ChartDetailScreenState
                         showTitles: false,
                       ),
                     ),
+                    bottomTitles: const AxisTitles(
+                      sideTitles:
+                      SideTitles(
+                        showTitles: false,
+                      ),
+                    ),
                     rightTitles:
                     const AxisTitles(
                       sideTitles:
@@ -251,19 +256,15 @@ class _ChartDetailScreenState
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
+                      curveSmoothness: 0.35,
+                      preventCurveOverShooting: true,
                       color: chartColor,
-                      barWidth: 2,
+                      barWidth: 3.5,
                       isStrokeCapRound: true,
-                      dotData:
-                      const FlDotData(
-                        show: false,
-                      ),
-                      belowBarData:
-                      BarAreaData(
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
                         show: true,
-                        color: chartColor
-                            .withOpacity(
-                            0.2),
+                        color: chartColor.withOpacity(0.1),
                       ),
                     ),
                   ],

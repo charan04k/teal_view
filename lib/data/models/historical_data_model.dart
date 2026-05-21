@@ -26,12 +26,14 @@ class HistoricalData extends Equatable {
       } catch (_) {}
     }
 
+    final close = (json['LTP'] as num?)?.toDouble() ?? 0.0;
+
     return HistoricalData(
       timestamp: timestamp,
-      open: (json['OPEN'] as num?)?.toDouble() ?? 0.0,
-      high: (json['HIGH'] as num?)?.toDouble() ?? 0.0,
-      low: (json['LOW'] as num?)?.toDouble() ?? 0.0,
-      close: (json['LTP'] as num?)?.toDouble() ?? 0.0,
+      open: (json['OPEN'] as num?)?.toDouble() ?? close,
+      high: (json['HIGH'] as num?)?.toDouble() ?? close,
+      low: (json['LOW'] as num?)?.toDouble() ?? close,
+      close: close,
       volume: json['VOLUME_DIFF'] as int? ?? 0,
     );
   }

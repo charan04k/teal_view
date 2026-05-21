@@ -144,26 +144,35 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
   }
   void _onTickReceived(ChartTickReceived event, Emitter<ChartState> emit) {
     // Only append ticks for the currently displayed symbol and in INTRADAY mode
-    if (state.symbol != event.tick.symbol || state.data.isEmpty) return;
+    if (state.symbol!.toUpperCase() != event.tick.symbol.toUpperCase() || state.data.isEmpty) return;
     if (state.range != 'INTRADAY') return;
 
     final updatedData = List<HistoricalData>.from(state.data);
-    final lastTs = updatedData.last.timestamp;
+    final lastPoint = updatedData.last;
     final tickTs = event.tick.timestamp;
     final ltp = event.tick.ltp;
 
-    // Skip ticks older than or equal to current last point (handles burst deduplication)
-    if (tickTs <= lastTs) return;
-
-    // Add each new tick as a new point to the line chart for smooth updates
-    updatedData.add(HistoricalData(
-        timestamp: tickTs,
-        open: ltp,
-        high: ltp,
-        low: ltp,
+    if (tickTs > lastPoint.timestamp) {
+      // Add each new tick as a new point to the line chart for smooth updates
+      updatedData.add(HistoricalData(
+          timestamp: tickTs,
+          open: ltp,
+          high: ltp,
+          low: ltp,
+          close: ltp,
+          volume: 0,
+      ));
+    } else {
+      // Update the last point with latest price to ensure live feel
+      updatedData[updatedData.length - 1] = HistoricalData(
+        timestamp: lastPoint.timestamp,
+        open: lastPoint.open,
+        high: ltp > lastPoint.high ? ltp : lastPoint.high,
+        low: ltp < lastPoint.low && ltp > 0 ? ltp : lastPoint.low,
         close: ltp,
-        volume: 0,
-    ));
+        volume: lastPoint.volume,
+      );
+    }
 
     emit(state.copyWith(data: updatedData));
   }
